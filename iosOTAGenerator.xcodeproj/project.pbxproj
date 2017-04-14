@@ -23,6 +23,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BCE481F70800EF035495F089 /* build-config.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = "build-config.plist"; sourceTree = "<group>"; };
+		BCE4834B0A733ABBAF8303E1 /* IamBuild.ipa */ = {isa = PBXFileReference; lastKnownFileType = file.ipa; path = IamBuild.ipa; sourceTree = "<group>"; };
 		FB1BA3A71EA0D09D00C1ECDD /* iosOTAGenerator */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = iosOTAGenerator; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB1BA3AA1EA0D09D00C1ECDD /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +60,8 @@
 			isa = PBXGroup;
 			children = (
 				FB1BA3AA1EA0D09D00C1ECDD /* main.swift */,
+				BCE481F70800EF035495F089 /* build-config.plist */,
+				BCE4834B0A733ABBAF8303E1 /* IamBuild.ipa */,
 			);
 			path = iosOTAGenerator;
 			sourceTree = "<group>";
