@@ -8,6 +8,11 @@
 
 import Foundation
 
+var configFilePath = ""
+var ipaPath = ""
+var htmlPath = ""
+var buildNumber = ""
+
 func createManifest(url: String, appName: String, bundleId: String, bundleVersion: String) -> String {
     return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" +
@@ -52,10 +57,24 @@ func writeManifestToPath(manifestUrl: URL, webUrl: String, appName: String, bund
 }
 
 func indexHtmlFile(manifestUrl: String, appName: String, version: String) -> String {
-    return "<a href=\"itms-services://?action=download-manifest&url=\(manifestUrl)\">Install App \(appName) v\(version)</a>"
+    return "<a href=\"itms-services://?action=download-manifest&url=\(manifestUrl)\">\(appName) v\(version) Build: \(buildNumber)</a>"
 }
 
-func moveToFolderAndCreateFiles(fileName: String, webUrl: String, appName: String, bundleId: String, bundleVersion: String) {
+let htmlTag = "OTA_URLS_TABLE"
+
+func appendLinkInHTML(htmlPath: String, linkToNewBuild: String) {
+    let url = URL(fileURLWithPath: htmlPath)
+
+    if let text = try? String(contentsOf: url, encoding: .utf8) {
+
+        let divToReplace = "<div id=\"\(htmlTag)\">"
+        let replaced = text.replacingOccurrences(of: divToReplace, with: divToReplace + linkToNewBuild + "\n<br><br>\n")
+
+        try? replaced.write(to: url, atomically: false, encoding: String.Encoding.utf8)
+    }
+}
+
+func moveToFolderAndCreateFiles(fileName: String, webUrl: String, appName: String, bundleId: String, bundleVersion: String, htmlPath: String) {
     let fileUrl = URL(fileURLWithPath: fileName)
 
     let filename = fileUrl.pathComponents.last!
@@ -72,16 +91,19 @@ func moveToFolderAndCreateFiles(fileName: String, webUrl: String, appName: Strin
         try writeManifestToPath(manifestUrl: moveToUrl.appendingPathComponent("manifest.plist"),
                 webUrl: "\(webUrl)\(filenameWithoutExt)/\(filename)", appName: appName, bundleId: bundleId, bundleVersion: bundleVersion)
 
-        try indexHtmlFile(manifestUrl: "\(webUrl)\(filenameWithoutExt)/manifest.plist", appName: appName, version: bundleVersion).write(to: moveToUrl.appendingPathComponent("index.html"),
+        let htmlIndex = indexHtmlFile(manifestUrl: "\(webUrl)\(filenameWithoutExt)/manifest.plist", appName: appName, version: bundleVersion)
+        try htmlIndex.write(to: moveToUrl.appendingPathComponent("index.html"),
                 atomically: false,
                 encoding: String.Encoding.utf8)
+
+        appendLinkInHTML(htmlPath: htmlPath, linkToNewBuild: htmlIndex)
 
     } catch let error as NSError {
         print("Error: \(error.localizedDescription)")
     }
 }
 
-func getConfig(configPath: String, ipaPath: String) {
+func getConfig(configPath: String, ipaPath: String, htmlPath: String) {
     let plistUrl = URL(fileURLWithPath: configPath)
     if let data = try? Data(contentsOf: plistUrl) {
 
@@ -93,7 +115,7 @@ func getConfig(configPath: String, ipaPath: String) {
                let appName = result["appName"] as? String {
 
                 moveToFolderAndCreateFiles(fileName: ipaPath,
-                        webUrl: webUrl, appName: appName, bundleId: bundleId, bundleVersion: bundleVersion)
+                        webUrl: webUrl, appName: appName, bundleId: bundleId, bundleVersion: bundleVersion, htmlPath: htmlPath)
             } else {
                 print("Error getting list from information, required: bundleId, version, webUrl, appName")
             }
@@ -108,9 +130,6 @@ func validateData() {
         return print("To few args")
     }
 
-    var configFilePath = ""
-    var ipaPath = ""
-
     for index in 0..<CommandLine.arguments.count {
         let argument = CommandLine.arguments[index]
 
@@ -121,8 +140,16 @@ func validateData() {
         if argument == "-ipaPath" {
             ipaPath = CommandLine.arguments[index + 1]
         }
+
+        if argument == "-htmlPath" {
+            htmlPath = CommandLine.arguments[index + 1]
+        }
+
+        if argument == "-buildNumber" {
+            buildNumber = CommandLine.arguments[index + 1]
+        }
     }
-    getConfig(configPath: configFilePath, ipaPath: ipaPath)
+    getConfig(configPath: configFilePath, ipaPath: ipaPath, htmlPath: htmlPath)
 }
 
 validateData()
